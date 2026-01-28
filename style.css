@@ -1,0 +1,12 @@
+hr {
+    border: none;
+    height: 1px;
+    background-color: currentColor;
+    opacity: 0.2;
+}
+
+
+.underline-img {
+    filter: brightness(1.2) saturate(250%) invert(12%) sepia(100%) saturate(5000%) hue-rotate(0deg) !important;
+    opacity: 1 !important;
+}

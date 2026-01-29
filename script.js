@@ -1,8 +1,11 @@
 const POKEAPI_URL = "https://pokeapi.co/api/v2";
 const pokemonContainer = document.getElementById("pokemonContainer");
 const loadingSpinner = document.getElementById("loadingSpinner");
-const searchInput = document.getElementById("searchInput");
+const searchForm = document.getElementById("searchForm");
 const typeDropdown = document.getElementById("typeDropdown");
+let selectedType = null;
+
+
 
 async function fetchPokemon(pokemonName) {
   try {
@@ -38,7 +41,7 @@ async function fetchPokemonList(limit = 60, offset = 0) {
 
     for (let pokemon of data.results) {
       const details = await fetch(pokemon.url).then((r) => r.json());
-      // Só mostrar na base de dados globais se não estiver nos favoritos
+      
       if (!favorites.includes(details.name)) {
         displayPokemonCard(details);
       }
@@ -70,6 +73,9 @@ async function fetchPokemonByType(type) {
 }
 
 function displayPokemonCard(pokemon) {
+  const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+  const isFavorite = favorites.includes(pokemon.name);
+
   const card = document.createElement("div");
   card.className = "col-md-4 col-lg-3";
 
@@ -84,12 +90,13 @@ function displayPokemonCard(pokemon) {
       <div class="card-body">
         <h5 class="card-title text-capitalize">${pokemon.name}</h5>
         <p class="card-text">
-          
           <small class="text-muted">Tipos: ${types}</small>
         </p>
         <div class="d-flex justify-content-between">
-         
-          <button class="btn btn-sm btn-outline-danger" onclick="saveFavorite('${pokemon.name}')">❤️</button>
+          <button class="btn btn-sm ${isFavorite ? "btn-danger" : "btn-outline-danger"}"
+            onclick="saveFavorite('${pokemon.name}')">
+            ❤️
+          </button>
         </div>
       </div>
     </div>
@@ -97,6 +104,7 @@ function displayPokemonCard(pokemon) {
 
   pokemonContainer.appendChild(card);
 }
+
 
 function showSpinner(show) {
   loadingSpinner.style.display = show ? "block" : "none";
@@ -107,13 +115,15 @@ function saveFavorite(pokemonName) {
 
   if (!favorites.includes(pokemonName)) {
     favorites.push(pokemonName);
-    localStorage.setItem("favorites", JSON.stringify(favorites));
   } else {
     favorites = favorites.filter((f) => f !== pokemonName);
-    localStorage.setItem("favorites", JSON.stringify(favorites));
   }
-  refreshSections();
+
+  localStorage.setItem("favorites", JSON.stringify(favorites));
+
+  refreshSections(); 
 }
+
 
 function refreshSections() {
   const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
@@ -124,7 +134,7 @@ function refreshSections() {
   pokemonContainer.innerHTML = "";
 
   if (favorites.length > 0) {
-    favoritesList.style.display = "grid";
+    favoritesList.style.display = "";
     favorites.forEach((pokemon) => {
       fetchPokemonAndDisplay(pokemon, favoritesList);
     });
@@ -135,43 +145,42 @@ function refreshSections() {
   fetchPokemonListFiltered();
 }
 
-async function fetchPokemonListFiltered(limit = 200, offset = 0) {
+async function fetchPokemonListFiltered(limit = 151, offset = 0) {
   try {
+    showSpinner(true);
     const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    const searchValue = searchInput.value.trim().toLowerCase();
+
     const response = await fetch(
-      `${POKEAPI_URL}/pokemon?limit=${limit}&offset=${offset}`,
+      `${POKEAPI_URL}/pokemon?limit=${limit}&offset=${offset}`
     );
     const data = await response.json();
 
-    const pokemonContainer = document.getElementById("pokemonContainer");
+    pokemonContainer.innerHTML = "";
 
     for (let pokemon of data.results) {
       const details = await fetch(pokemon.url).then((r) => r.json());
 
-      if (!favorites.includes(details.name)) {
+      const nameMatch = details.name.includes(searchValue);
+      const typeMatch = selectedType
+        ? details.types.some((t) => t.type.name === selectedType)
+        : true;
+
+      if (nameMatch && typeMatch && !favorites.includes(details.name)) {
         displayPokemonCard(details);
       }
     }
+      if (!favorites.includes(details.name)) {
+  displayPokemonCard(details);
+}
+
+    showSpinner(false);
   } catch (error) {
     console.error("Erro ao buscar lista filtrada:", error);
+    showSpinner(false);
   }
 }
 
-function loadFavorites() {
-  const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-  const favoritesList = document.getElementById("favoritesList");
-
-  if (favorites.length > 0) {
-    favoritesList.style.display = "grid";
-    favoritesList.innerHTML = "";
-
-    favorites.forEach((pokemon) => {
-      fetchPokemonAndDisplay(pokemon, favoritesList);
-    });
-  } else {
-    favoritesList.style.display = "none";
-  }
-}
 
 async function fetchPokemonAndDisplay(pokemonName, container) {
   try {
@@ -212,29 +221,31 @@ async function fetchPokemonAndDisplay(pokemonName, container) {
   }
 }
 
-searchInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    const value = searchInput.value.trim();
-    if (value) {
-      pokemonContainer.innerHTML = "";
-      fetchPokemon(value);
-      searchInput.value = "";
-    }
-  }
+
+
+searchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  fetchPokemonListFiltered();
 });
+
+
 
 document.querySelectorAll("#typeDropdown .dropdown-item").forEach((item) => {
   item.addEventListener("click", (e) => {
     e.preventDefault();
-    const type = e.target.getAttribute("data-type");
+   selectedType = e.target.getAttribute("data-type") || null;
+
+
     const dropdownButton = document.querySelector(".dropdown-toggle");
-    dropdownButton.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+    dropdownButton.textContent =
+      selectedType.charAt(0).toUpperCase() + selectedType.slice(1);
+
     pokemonContainer.innerHTML = "";
-    fetchPokemonByType(type);
+    fetchPokemonListFiltered(); 
   });
 });
 
 window.addEventListener("load", () => {
-  fetchPokemonList(60, 0);
-  loadFavorites();
+  refreshSections(); 
 });
+

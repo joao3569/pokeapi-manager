@@ -25,6 +25,7 @@
     />
   </head>
   <body>
+    <!-- fiz essa navbar para emplementar os elementos dos pokemons para saber qual pokemon e o favorito dela ai ela tambem tem um local para pesquisar o nome do pokemon dela-->
     <nav
       class="navbar navbar-expand-lg bg-dark text-light m-auto container-fluid"
     >
@@ -44,6 +45,7 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          
           <form class="d-flex ms-auto me-2 m-2" role="search" id="searchForm">
             <input
               class="form-control"
@@ -69,7 +71,8 @@
                 style="list-style: none"
                 id="typeDropdown"
               >
-              <li><a class="dropdown-item" href="#" data-type="todos ostipos">Todos os tipos</a></li>
+             <li><a class="dropdown-item" href="#" data-type="">Todos os tipos</a></li>
+
 
                 <li>
                   <a class="dropdown-item" href="#" data-type="fire">fire</a>
@@ -92,6 +95,7 @@
       </div>
     </nav>
 
+    <!--eu fiz esse meus favoritos para explicar para pessa se quando ela salvasse um pokemon cliclando no coração ela soubesse onde estaria o pokemon favorito dela -->
     <div class="container mt-4">
       <div class="d-flex align-items-center gap-2">
         <img src="/img/heart-fill.svg" alt="coração" class="underline-img" />
@@ -100,10 +104,12 @@
       <hr class="opacity-25" />
     </div>
 
+    <!-- eu fiz esse local aqui para aparecer os pokemon na parte favoritos e no dados globais portanto eu poderia ter feito uma separada para fazer do base de dados mai aplicando as duas junto fica mais simples e economiza tempo -->
     <div class="container mt-5" id="favoritesSection">
       <div id="favoritesList" class="row g-4" style="display: none"></div>
     </div>
 
+    <!--base de dados foi feita para separar o favoritos de todos os pokemons para nao confudir a cabeça do usuario -->
     <div class="container mt-5">
       <div class="d-flex align-items-center gap-2">
         <i class="fa-solid fa-globe text-primary fs-5"></i>
@@ -112,6 +118,7 @@
       <hr class="opacity-25" />
     </div>
 
+    <!--aparece isso para quando o usuario procurar um pokemon ele ver que esta procurando e não ficar achando que não esta procurando o pokemon-->
     <div class="container mt-5">
       <div id="pokemonContainer" class="row g-4"></div>
       <div id="loadingSpinner" class="text-center mt-4" style="display: none">

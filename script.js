@@ -6,6 +6,8 @@ const typeDropdown = document.getElementById("typeDropdown");
 let selectedType = null;
 
 
+//serve para buscar o pokemon pelo nome e se nao encontrar ele mostra uma mensagem de erro por conta que o fecht serve para puxar ele mais se nao encontrar ele da erro 
+// if e aquele conponente se existir aquele pokemon ele mostra se nao existir ele mostra a mensagem de erro 
 
 async function fetchPokemon(pokemonName) {
   try {
@@ -17,8 +19,8 @@ async function fetchPokemon(pokemonName) {
     if (!response.ok) {
       throw new Error("Pokémon não encontrado");
     }
-
-    const data = await response.json();
+//const data e para puxar os dados do pokemon que foi buscado se ele existir ele nao vai mandar pro if
+    const data = await response.json();     
     displayPokemonCard(data);
     showSpinner(false);
   } catch (error) {
@@ -28,6 +30,7 @@ async function fetchPokemon(pokemonName) {
   }
 }
 
+// essa função serve para puxar a lista de pokemons da api e mostrar na tela e limitar o numero de pokemons mostrados por vez
 async function fetchPokemonList(limit = 60, offset = 0) {
   try {
     showSpinner(true);
@@ -36,12 +39,12 @@ async function fetchPokemonList(limit = 60, offset = 0) {
       `${POKEAPI_URL}/pokemon?limit=${limit}&offset=${offset}`,
     );
     const data = await response.json();
-
+// esse innerHTML serve para limpar a tela antes de mostrar os pokemons
     pokemonContainer.innerHTML = "";
 
     for (let pokemon of data.results) {
       const details = await fetch(pokemon.url).then((r) => r.json());
-      
+      // esse if serve para verificar se o pokemon ja esta nos favoritos se estiver ele nao mostra na lista principal
       if (!favorites.includes(details.name)) {
         displayPokemonCard(details);
       }
@@ -52,7 +55,7 @@ async function fetchPokemonList(limit = 60, offset = 0) {
     showSpinner(false);
   }
 }
-
+// essa função serve para buscar os pokemons por tipo
 async function fetchPokemonByType(type) {
   try {
     showSpinner(true);
@@ -65,6 +68,7 @@ async function fetchPokemonByType(type) {
       const details = await fetch(pokemon.pokemon.url).then((r) => r.json());
       displayPokemonCard(details);
     }
+    // essa parte serve para mostrar o spinner enquanto os pokemons estao sendo carregados e ele some quando os pokemons ja estao na tela e se os pokemon nao forem encontrados ele mostra uma mensagem de erro
     showSpinner(false);
   } catch (error) {
     console.error("Erro ao buscar por tipo:", error);
@@ -72,6 +76,7 @@ async function fetchPokemonByType(type) {
   }
 }
 
+// essa função serve para mostrar o card do pokemon na tela
 function displayPokemonCard(pokemon) {
   const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
   const isFavorite = favorites.includes(pokemon.name);
@@ -105,11 +110,11 @@ function displayPokemonCard(pokemon) {
   pokemonContainer.appendChild(card);
 }
 
-
+// essa função serve para mostrar o spinner enquanto os pokemons estao sendo carregados
 function showSpinner(show) {
   loadingSpinner.style.display = show ? "block" : "none";
 }
-
+//essa função serve para salvar os pokemons favoritos no localstorage
 function saveFavorite(pokemonName) {
   let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 
@@ -124,7 +129,7 @@ function saveFavorite(pokemonName) {
   refreshSections(); 
 }
 
-
+//essa função serve para atualizar a seção de favoritos e a lista principal de pokemons
 function refreshSections() {
   const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
   const favoritesList = document.getElementById("favoritesList");
@@ -144,23 +149,24 @@ function refreshSections() {
 
   fetchPokemonListFiltered();
 }
-
-async function fetchPokemonListFiltered(limit = 151, offset = 0) {
+//essa função serve para buscar a lista de pokemons filtrados por nome e tipo
+async function fetchPokemonListFiltered(limit = 1025, offset = 0) {
+  
   try {
     showSpinner(true);
     const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
     const searchValue = searchInput.value.trim().toLowerCase();
-
+// esse fetch serve para puxar a lista de pokemons da api e pega o limite e o offset 
     const response = await fetch(
       `${POKEAPI_URL}/pokemon?limit=${limit}&offset=${offset}`
     );
     const data = await response.json();
 
     pokemonContainer.innerHTML = "";
-
+// esse for serve para percorrer a lista de pokemons e mostrar na tela os pokemons que correspondem ao filtro de nome e tipo
     for (let pokemon of data.results) {
       const details = await fetch(pokemon.url).then((r) => r.json());
-
+// essas constantes servem para verificar se o nome do pokemon corresponde ao valor do input de busca e se o tipo do pokemon corresponde ao tipo selecionado no dropdown
       const nameMatch = details.name.includes(searchValue);
       const typeMatch = selectedType
         ? details.types.some((t) => t.type.name === selectedType)
@@ -181,7 +187,7 @@ async function fetchPokemonListFiltered(limit = 151, offset = 0) {
   }
 }
 
-
+//essa função serve para buscar um pokemon pelo nome e mostrar na tela em um container especifico
 async function fetchPokemonAndDisplay(pokemonName, container) {
   try {
     const response = await fetch(
@@ -196,7 +202,7 @@ async function fetchPokemonAndDisplay(pokemonName, container) {
       const image =
         data.sprites.other["official-artwork"].front_default ||
         data.sprites.front_default;
-
+// esse innerHTML serve para mostrar o card do pokemon na tela
       card.innerHTML = `
         <div class="card h-100 shadow-sm">
           <img src="${image}" class="card-img-top p-3" alt="${data.name}" style="height: 200px; object-fit: contain;">
@@ -222,29 +228,34 @@ async function fetchPokemonAndDisplay(pokemonName, container) {
 }
 
 
-
+//esse serve para adicionar um evento para manter os pokemons favoritos mesmo depois de atualizar a pagina
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();
   fetchPokemonListFiltered();
 });
 
-
-
+//serve para adicionar um evento para filtrar os pokemons por tipo quando o usuario selecionar um tipo no dropdown
 document.querySelectorAll("#typeDropdown .dropdown-item").forEach((item) => {
   item.addEventListener("click", (e) => {
     e.preventDefault();
-   selectedType = e.target.getAttribute("data-type") || null;
 
-
+    const type = e.target.getAttribute("data-type");
     const dropdownButton = document.querySelector(".dropdown-toggle");
-    dropdownButton.textContent =
-      selectedType.charAt(0).toUpperCase() + selectedType.slice(1);
+// essa parte serve para atualizar o texto do dropdown com o tipo selecionado ou mostrar "Todos os tipos" se nenhum tipo for selecionado
+    if (!type) {
+      
+      selectedType = null;
+      dropdownButton.textContent = "Todos os tipos";
+    } else {
+      selectedType = type;
+      dropdownButton.textContent =
+        type.charAt(0).toUpperCase() + type.slice(1);
+    }
 
-    pokemonContainer.innerHTML = "";
-    fetchPokemonListFiltered(); 
+    fetchPokemonListFiltered();
   });
 });
-
+//essa parte serve para carregar os pokemons quando a pagina for carregada
 window.addEventListener("load", () => {
   refreshSections(); 
 });
